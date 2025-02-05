@@ -4,6 +4,8 @@ import asyncio
 from pydantic import BaseModel
 from database import insert_sensor_data, get_latest_sensor_data
 from background_tasks import generate_sensor_data
+import os
+import uvicorn
 
 app = FastAPI()
 
@@ -40,6 +42,8 @@ def get_sensor_data():
         "sensor_data": data,
         "risk_levels": [calculate_risk_level(d[1]) for d in data],  # 위험 수준 추가
     }
+def read_data():
+    return {"message" : "Hello, FastAPI"}
   
 # CORS 설정 추가
 app.add_middleware(
@@ -49,3 +53,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000)) # Railway가 제공하는 PORT 환경변수
+    uvicorn.run(app, host="0.0.0.0", port=port)
