@@ -94,5 +94,5 @@ def root():
     return {"message": "FastAPI 서버 정상 실행 중!"}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Railway 환경변수 사용
+    port = int(os.environ.get("PORT", 8000))  # Railway 환경변수 사용
     uvicorn.run(app, host="0.0.0.0", port=port)
