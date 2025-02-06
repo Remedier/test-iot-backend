@@ -22,21 +22,35 @@ app.add_middleware(
 )
 
 # RN400 Check-in API (장치 상태 확인)
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
+import datetime
+
+app = FastAPI()
+
 @app.post("/checkin")
 async def checkin(request: Request):
-    data = await request.form()  # RN400은 `application/x-www-form-urlencoded` 형식 사용
-    print(f"[CHECK-IN] {data}")
+    try:
+        # 데이터 파싱
+        data = await request.form()
+        print(f"[CHECK-IN DATA]: {data}")
 
-    response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-    <root>
-        <ack>ok</ack>
-        <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
-        <offset-ch1>0.0</offset-ch1>  <!-- 센서 1 보정 값 -->
-        <offset-ch2>0.0</offset-ch2>  <!-- 센서 2 보정 값 -->
-        <sample-mode>3</sample-mode>  <!-- 측정 간격 및 전송 간격 설정 -->
-    </root>"""
-    
-    return Response(content=response_xml, media_type="application/xml")
+        # XML 응답 생성
+        response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <root>
+            <ack>ok</ack>
+            <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
+            <offset-ch1>0.0</offset-ch1>
+            <offset-ch2>0.0</offset-ch2>
+            <sample-mode>3</sample-mode>
+        </root>"""
+        return Response(content=response_xml, media_type="application/xml")
+
+    except Exception as e:
+        # 예외 처리 및 디버그 출력
+        print(f"Error processing Check-in: {e}")
+        return Response(content="<xml><root><ack>error</ack></root></xml>", media_type="application/xml")
+
 
 
 # RN400 Data-in API (센서 데이터 수신)
