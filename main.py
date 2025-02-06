@@ -21,13 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"Incoming request path: {request.url.path}")
+    response = await call_next(request)
+    return response
+
 # RN400 Check-in API (장치 상태 확인)
-from fastapi import FastAPI, Request
-from fastapi.responses import Response
-import datetime
-
-app = FastAPI()
-
 @app.post("/checkin")
 async def checkin(request: Request):
     try:
