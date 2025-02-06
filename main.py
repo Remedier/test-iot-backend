@@ -51,7 +51,51 @@ async def checkin(request: Request):
         print(f"Error processing Check-in: {e}")
         return Response(content="<xml><root><ack>error</ack></root></xml>", media_type="application/xml")
 
+@app.post("/")
+async def checkin(request: Request):
+    try:
+        # 데이터 파싱
+        data = await request.form()
+        print(f"[CHECK-IN DATA]: {data}")
 
+        # XML 응답 생성
+        response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <root>
+            <ack>ok</ack>
+            <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
+            <offset-ch1>0.0</offset-ch1>
+            <offset-ch2>0.0</offset-ch2>
+            <sample-mode>3</sample-mode>
+        </root>"""
+        return Response(content=response_xml, media_type="application/xml")
+
+    except Exception as e:
+        # 예외 처리 및 디버그 출력
+        print(f"Error processing Check-in: {e}")
+        return Response(content="<xml><root><ack>error</ack></root></xml>", media_type="application/xml")
+    
+@app.post("/checkin/checkin")
+async def checkin(request: Request):
+    try:
+        # 데이터 파싱
+        data = await request.form()
+        print(f"[CHECK-IN DATA]: {data}")
+
+        # XML 응답 생성
+        response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <root>
+            <ack>ok</ack>
+            <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
+            <offset-ch1>0.0</offset-ch1>
+            <offset-ch2>0.0</offset-ch2>
+            <sample-mode>3</sample-mode>
+        </root>"""
+        return Response(content=response_xml, media_type="application/xml")
+
+    except Exception as e:
+        # 예외 처리 및 디버그 출력
+        print(f"Error processing Check-in: {e}")
+        return Response(content="<xml><root><ack>error</ack></root></xml>", media_type="application/xml")
 
 # RN400 Data-in API (센서 데이터 수신)
 @app.post("/datain")
