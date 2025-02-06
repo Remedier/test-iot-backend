@@ -24,17 +24,20 @@ app.add_middleware(
 # RN400 Check-in API (장치 상태 확인)
 @app.post("/checkin")
 async def checkin(request: Request):
-    data = await request.json()
+    data = await request.form()  # RN400은 `application/x-www-form-urlencoded` 형식 사용
     print(f"[CHECK-IN] {data}")
 
-    # RN400이 요구하는 XML 응답 형식 반환
     response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
     <root>
         <ack>ok</ack>
         <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
+        <offset-ch1>0.0</offset-ch1>  <!-- 센서 1 보정 값 -->
+        <offset-ch2>0.0</offset-ch2>  <!-- 센서 2 보정 값 -->
+        <sample-mode>3</sample-mode>  <!-- 측정 간격 및 전송 간격 설정 -->
     </root>"""
     
     return Response(content=response_xml, media_type="application/xml")
+
 
 # RN400 Data-in API (센서 데이터 수신)
 @app.post("/datain")
