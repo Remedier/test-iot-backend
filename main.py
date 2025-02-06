@@ -1,23 +1,52 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from pydantic import BaseModel
-from database import insert_sensor_data, get_latest_sensor_data
-from background_tasks import generate_sensor_data
+import datetime
+from fastapi.responses import Response
 import os
 import uvicorn
 
+from database import insert_sensor_data, get_latest_sensor_data
+from background_tasks import generate_sensor_data
+
 app = FastAPI()
+
+# CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # React (localhost:3000) 허용
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# RN400 Check-in API (장치 상태 확인)
+@app.post("/checkin")
+async def checkin(request: Request):
+    data = await request.json()
+    print(f"[CHECK-IN] {data}")
+
+    # RN400이 요구하는 XML 응답 형식 반환
+    response_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <root>
+        <ack>ok</ack>
+        <timestamp>{int(datetime.datetime.utcnow().timestamp())}</timestamp>
+    </root>"""
+    
+    return Response(content=response_xml, media_type="application/xml")
+
+# RN400 Data-in API (센서 데이터 수신)
+@app.post("/datain")
+async def datain(request: Request):
+    data = await request.json()
+    print(f"[DATA-IN] {data}")
+    return Response(content="<?xml><root><ack>ok</ack></root></xml>", media_type="application/xml")
 
 # 데이터 모델 정의
 class SensorData(BaseModel):
     value: float
 
-# 백그라운드에서 자동 데이터 추가 기능 실행
-@app.on_event("startup")
-async def start_background_tasks():
-    asyncio.create_task(generate_sensor_data())
-    
 # 위험 수준 계산 함수
 def calculate_risk_level(value):
     if value < 20:
@@ -42,18 +71,11 @@ def get_sensor_data():
         "sensor_data": data,
         "risk_levels": [calculate_risk_level(d[1]) for d in data],  # 위험 수준 추가
     }
-def read_data():
-    return {"message" : "Hello, FastAPI"}
-  
-# CORS 설정 추가
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # React (localhost:3000) 허용
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+@app.get("/")
+def root():
+    return {"message": "FastAPI 서버 정상 실행 중!"}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000)) # Railway가 제공하는 PORT 환경변수
+    port = int(os.environ.get("PORT", 8000))  # Railway 환경변수 사용
     uvicorn.run(app, host="0.0.0.0", port=port)
